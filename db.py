@@ -13,12 +13,12 @@ Session = sessionmaker(bind=engine)
 atexit.register(engine.dispose)
 
 
-class User(Base):
+class Ad(Base):
 
-    __tablename__ = 'app_users'
+    __tablename__ = 'app_ads'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    username = Column(String, nullable=False, unique=True, index=True)
+    title = Column(String, nullable=False, unique=True, index=True)
     password = Column(String, nullable=False)
     creation_time = Column(DateTime, server_default=func.now())
 

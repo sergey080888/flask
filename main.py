@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request
 from flask.views import MethodView
-from db import User, Session
-from schema import validate_create_user
+from db import Ad, Session
+from schema import validate_create_ad
 from errors import HttpError
 from sqlalchemy.exc import IntegrityError
 from flask_bcrypt import Bcrypt
@@ -17,56 +17,56 @@ def error_handler(error: HttpError):
     return http_response
 
 
-def get_user(user_id: int, session: Session):
-    user = session.query(User).get(user_id)
-    if user is None:
-        raise HttpError(404, 'user not found')
-    return user
+def get_ad(ad_id: int, session: Session):
+    ad = session.query(Ad).get(ad_id)
+    if ad is None:
+        raise HttpError(404, 'ad not found')
+    return ad
 
 
 class Advertisement(MethodView):
-    def get(self, user_id: int):
+    def get(self, ad_id: int):
         with Session() as session:
-            user = get_user(user_id, session)
+            ad = get_ad(ad_id, session)
             return jsonify({
-                'id': user.id,
-                'username': user.username,
-                'creation_time': user.creation_time.isoformat(),
+                'id': ad.id,
+                'title': ad.title,
+                'creation_time': ad.creation_time.isoformat(),
 
                 })
 
     def post(self):
-        json_data = validate_create_user(request.json)
+        json_data = validate_create_ad(request.json)
         json_data['password'] = bcrypt.generate_password_hash(json_data['password'].encode()).decode()
         with Session() as session:
-            new_user = User(**json_data)
-            session.add(new_user)
+            new_ad = Ad(**json_data)
+            session.add(new_ad)
             try:
                 session.commit()
             except IntegrityError:
-                raise HttpError(409, 'user already exists')
-            return jsonify({'id': new_user.id,
-                            'creation_time': (new_user.creation_time.isoformat())})
+                raise HttpError(409, 'ad already exists')
+            return jsonify({'id': new_ad.id,
+                            'creation_time': (new_ad.creation_time.isoformat())})
 
-    def patch(self, user_id: int):
+    def patch(self, ad_id: int):
         json_data = request.json
         with Session() as session:
-            user = get_user(user_id, session)
+            ad = get_ad(ad_id, session)
             for field, value in json_data.items():
-                setattr(user, field, value)
-            session.add(user)
+                setattr(ad, field, value)
+            session.add(ad)
             session.commit()
         return jsonify({'status': 'succes'})
 
-    def delete(self, user_id: int):
+    def delete(self, ad_id: int):
         with Session() as session:
-            user = get_user(user_id, session)
-            session.delete(user)
+            ad = get_ad(ad_id, session)
+            session.delete(ad)
             session.commit()
             return jsonify({'status': 'succes'})
 
 
-app.add_url_rule("/users/<int:user_id>/", view_func=Advertisement.as_view('advertisement'),
+app.add_url_rule("/ads/<int:ad_id>/", view_func=Advertisement.as_view('advertisement'),
                  methods=['GET', 'PATCH', 'DELETE'])
-app.add_url_rule("/users", view_func=Advertisement.as_view('advertisement1'), methods=['POST'])
+app.add_url_rule("/ads", view_func=Advertisement.as_view('advertisement1'), methods=['POST'])
 app.run(host='127.0.0.1', port=5000)

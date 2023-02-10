@@ -5,9 +5,9 @@ import re
 password_regex = re.compile("^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!#%*?&]{6,20}$")
 
 
-class CreateUser(BaseModel):
+class Createad(BaseModel):
 
-    username: str
+    title: str
     password: str
 
     @validator('password')
@@ -17,10 +17,10 @@ class CreateUser(BaseModel):
         return value
 
 
-def validate_create_user(json_data):
+def validate_create_ad(json_data):
 
     try:
-        user_schema = CreateUser(**json_data)
-        return user_schema.dict()
+        ad_schema = Createad(**json_data)
+        return ad_schema.dict()
     except ValidationError as er:
         raise HttpError(status_code=400, message=er.errors())
