@@ -18,8 +18,9 @@ class Ad(Base):
     __tablename__ = 'app_ads'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    title = Column(String, nullable=False, unique=True, index=True)
-    password = Column(String, nullable=False)
+    title = Column(String(100), nullable=False)
+    description = Column(String(300), nullable=False)
     creation_time = Column(DateTime, server_default=func.now())
+    owner = Column(String(50))
 
 Base.metadata.create_all(bind=engine)

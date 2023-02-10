@@ -3,7 +3,6 @@ from flask.views import MethodView
 from db import Ad, Session
 from schema import validate_create_ad
 from errors import HttpError
-from sqlalchemy.exc import IntegrityError
 from flask_bcrypt import Bcrypt
 
 app = Flask('app')
@@ -28,25 +27,24 @@ class Advertisement(MethodView):
     def get(self, ad_id: int):
         with Session() as session:
             ad = get_ad(ad_id, session)
-            return jsonify({
-                'id': ad.id,
-                'title': ad.title,
-                'creation_time': ad.creation_time.isoformat(),
-
-                })
-
+            return jsonify({'id': ad.id,
+                            'title': ad.title,
+                            'description': ad.description,
+                            'creation_time': ad.creation_time,
+                            'owner': ad.owner,
+                            })
     def post(self):
         json_data = validate_create_ad(request.json)
-        json_data['password'] = bcrypt.generate_password_hash(json_data['password'].encode()).decode()
         with Session() as session:
             new_ad = Ad(**json_data)
             session.add(new_ad)
-            try:
-                session.commit()
-            except IntegrityError:
-                raise HttpError(409, 'ad already exists')
+            session.commit()
             return jsonify({'id': new_ad.id,
-                            'creation_time': (new_ad.creation_time.isoformat())})
+                            'title': new_ad.title,
+                            'description': new_ad.description,
+                            'creation_time': new_ad.creation_time,
+                            'owner': new_ad.owner,
+                            })
 
     def patch(self, ad_id: int):
         json_data = request.json
@@ -69,4 +67,7 @@ class Advertisement(MethodView):
 app.add_url_rule("/ads/<int:ad_id>/", view_func=Advertisement.as_view('advertisement'),
                  methods=['GET', 'PATCH', 'DELETE'])
 app.add_url_rule("/ads", view_func=Advertisement.as_view('advertisement1'), methods=['POST'])
-app.run(host='127.0.0.1', port=5000)
+
+
+if __name__ == "__main__":
+    app.run(host='127.0.0.1', port=5000)
