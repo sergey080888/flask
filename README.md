@@ -24,4 +24,3 @@
 Порядок запуска:
 1. Установите библиотеки из requirements.txt
 2. Выполните docker compose up 
-3. 
